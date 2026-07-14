@@ -349,6 +349,9 @@ pub struct TextStyle {
     /// The font size to use, in pixels or rems.
     pub font_size: AbsoluteLength,
 
+    /// Extra horizontal space inserted after each glyph (CSS letter-spacing / tracking), in pixels.
+    pub letter_spacing: Pixels,
+
     /// The line height to use, in pixels or fractions
     pub line_height: DefiniteLength,
 
@@ -395,6 +398,7 @@ impl Default for TextStyle {
             font_features: FontFeatures::default(),
             font_fallbacks: None,
             font_size: rems(1.).into(),
+            letter_spacing: Pixels::ZERO,
             line_height: phi(),
             font_weight: FontWeight::default(),
             font_style: FontStyle::default(),
@@ -470,7 +474,7 @@ impl TextStyle {
                 weight: self.font_weight,
                 style: self.font_style,
             },
-            letter_spacing: Pixels::ZERO,
+            letter_spacing: self.letter_spacing,
             color: self.color,
             background_color: self.background_color,
             underline: self.underline,
@@ -1286,9 +1290,30 @@ impl From<Position> for taffy::style::Position {
 
 #[cfg(test)]
 mod tests {
-    use crate::{blue, green, red, yellow};
+    use crate::{blue, green, px, red, yellow};
 
     use super::*;
+
+    #[test]
+    fn to_run_carries_letter_spacing() {
+        let style = TextStyle {
+            letter_spacing: px(2.),
+            ..Default::default()
+        };
+        let run = style.to_run(4);
+        assert_eq!(run.letter_spacing, px(2.));
+    }
+
+    #[test]
+    fn refinement_applies_letter_spacing() {
+        let mut style = TextStyle::default();
+        let refinement = TextStyleRefinement {
+            letter_spacing: Some(px(3.)),
+            ..Default::default()
+        };
+        style.refine(&refinement);
+        assert_eq!(style.letter_spacing, px(3.));
+    }
 
     #[test]
     fn test_combine_highlights() {

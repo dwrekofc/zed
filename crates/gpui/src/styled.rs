@@ -1,7 +1,7 @@
 use crate::{
     self as gpui, AbsoluteLength, AlignContent, AlignItems, BorderStyle, CursorStyle,
     DefiniteLength, Display, Fill, FlexDirection, FlexWrap, Font, FontStyle, FontWeight, Hsla,
-    JustifyContent, Length, SharedString, StrikethroughStyle, StyleRefinement, TextAlign,
+    JustifyContent, Length, Pixels, SharedString, StrikethroughStyle, StyleRefinement, TextAlign,
     TextOverflow, TextStyleRefinement, UnderlineStyle, WhiteSpace, px, relative, rems,
 };
 pub use gpui_macros::{
@@ -411,6 +411,14 @@ pub trait Styled: Sized {
         self.text_style()
             .get_or_insert_with(Default::default)
             .font_size = Some(size.into());
+        self
+    }
+
+    /// Sets the letter spacing (tracking) of the text, in pixels.
+    fn letter_spacing(mut self, spacing: impl Into<Pixels>) -> Self {
+        self.text_style()
+            .get_or_insert_with(Default::default)
+            .letter_spacing = Some(spacing.into());
         self
     }
 
