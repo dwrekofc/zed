@@ -674,7 +674,7 @@ mod lenient_font_attributes {
 
 #[cfg(test)]
 mod tests {
-    use crate::{FontRun, GlyphId, MacTextSystem, PlatformTextSystem, font, px};
+    use crate::{FontRun, GlyphId, MacTextSystem, Pixels, PlatformTextSystem, font, px};
 
     #[test]
     fn test_layout_line_bom_char() {
@@ -684,6 +684,7 @@ mod tests {
         let mut style = FontRun {
             font_id,
             len: line.len(),
+            letter_spacing: Pixels::ZERO,
         };
 
         let layout = fonts.layout_line(line, px(16.), &[style]);

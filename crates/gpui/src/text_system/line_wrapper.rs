@@ -217,6 +217,7 @@ impl LineWrapper {
                 &[FontRun {
                     len: buffer.len(),
                     font_id: self.font_id,
+                    letter_spacing: Pixels::ZERO,
                 }],
             )
             .width
@@ -343,6 +344,7 @@ mod tests {
                     weight: FontWeight::default(),
                     style: FontStyle::Normal,
                 },
+                letter_spacing: Pixels::ZERO,
                 color: Hsla::default(),
                 background_color: None,
                 underline: None,
@@ -689,6 +691,7 @@ mod tests {
             let normal = TextRun {
                 len: 0,
                 font: font("Helvetica"),
+                letter_spacing: Pixels::ZERO,
                 color: Default::default(),
                 underline: Default::default(),
                 strikethrough: None,
@@ -697,6 +700,7 @@ mod tests {
             let bold = TextRun {
                 len: 0,
                 font: font("Helvetica").bold(),
+                letter_spacing: Pixels::ZERO,
                 color: Default::default(),
                 underline: Default::default(),
                 strikethrough: None,

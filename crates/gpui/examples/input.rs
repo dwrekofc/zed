@@ -452,6 +452,7 @@ impl Element for TextElement {
         let run = TextRun {
             len: display_text.len(),
             font: style.font(),
+            letter_spacing: Pixels::ZERO,
             color: text_color,
             background_color: None,
             underline: None,

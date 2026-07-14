@@ -470,6 +470,7 @@ impl TextStyle {
                 weight: self.font_weight,
                 style: self.font_style,
             },
+            letter_spacing: Pixels::ZERO,
             color: self.color,
             background_color: self.background_color,
             underline: self.underline,

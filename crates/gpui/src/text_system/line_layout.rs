@@ -557,10 +557,11 @@ impl LineLayoutCache {
             layout
         } else {
             let text = SharedString::from(text);
-            let layout = Arc::new(
-                self.platform_text_system
-                    .layout_line(&text, font_size, runs),
-            );
+            let mut layout = self
+                .platform_text_system
+                .layout_line(&text, font_size, runs);
+            apply_letter_spacing(&mut layout, runs);
+            let layout = Arc::new(layout);
             let key = Arc::new(CacheKey {
                 text,
                 font_size,
@@ -579,6 +580,34 @@ impl LineLayoutCache {
 pub struct FontRun {
     pub(crate) len: usize,
     pub(crate) font_id: FontId,
+    pub(crate) letter_spacing: Pixels,
+}
+
+fn apply_letter_spacing(layout: &mut LineLayout, runs: &[FontRun]) {
+    if runs.iter().all(|run| run.letter_spacing == Pixels::ZERO) {
+        return;
+    }
+
+    let mut cumulative = Pixels::ZERO;
+    for run in layout.runs.iter_mut() {
+        for glyph in run.glyphs.iter_mut() {
+            glyph.position.x += cumulative;
+            cumulative += spacing_for_byte(runs, glyph.index);
+        }
+    }
+    layout.width += cumulative;
+}
+
+fn spacing_for_byte(runs: &[FontRun], byte_index: usize) -> Pixels {
+    let mut offset = 0;
+    for run in runs {
+        let run_end = offset + run.len;
+        if (offset..run_end).contains(&byte_index) {
+            return run.letter_spacing;
+        }
+        offset = run_end;
+    }
+    Pixels::ZERO
 }
 
 trait AsCacheKeyRef {
@@ -612,6 +641,38 @@ impl Eq for (dyn AsCacheKeyRef + '_) {}
 impl Hash for (dyn AsCacheKeyRef + '_) {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_cache_key_ref().hash(state)
+    }
+}
+
+#[cfg(all(target_os = "macos", test))]
+mod letter_spacing_tests {
+    use super::{FontRun, LineLayoutCache};
+    use crate::{MacTextSystem, Pixels, PlatformTextSystem, font, px};
+    use std::sync::Arc;
+
+    #[test]
+    fn letter_spacing_widens_line() {
+        let platform = Arc::new(MacTextSystem::new());
+        let font_id = platform.font_id(&font("Helvetica")).unwrap();
+        let cache = LineLayoutCache::new(platform.clone());
+        let text = "AAAA";
+
+        let unspaced_runs = [FontRun {
+            len: text.len(),
+            font_id,
+            letter_spacing: Pixels::ZERO,
+        }];
+        let spaced_runs = [FontRun {
+            len: text.len(),
+            font_id,
+            letter_spacing: px(4.),
+        }];
+
+        let unspaced = cache.layout_line::<&str>(text, px(16.), &unspaced_runs);
+        let spaced = cache.layout_line::<&str>(text, px(16.), &spaced_runs);
+
+        assert!(spaced.width > unspaced.width);
+        assert!(spaced.width - unspaced.width >= px(12.));
     }
 }
 

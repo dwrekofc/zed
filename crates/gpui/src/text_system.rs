@@ -425,13 +425,18 @@ impl WindowTextSystem {
 
                 let run_len_within_line = cmp::min(line_end, run_start + run.len) - run_start;
 
-                if last_font == Some(run.font.clone()) {
+                if last_font == Some(run.font.clone())
+                    && font_runs
+                        .last()
+                        .is_some_and(|last_run| last_run.letter_spacing == run.letter_spacing)
+                {
                     font_runs.last_mut().unwrap().len += run_len_within_line;
                 } else {
                     last_font = Some(run.font.clone());
                     font_runs.push(FontRun {
                         len: run_len_within_line,
                         font_id: self.resolve_font(&run.font),
+                        letter_spacing: run.letter_spacing,
                     });
                 }
 
@@ -533,7 +538,7 @@ impl WindowTextSystem {
         for run in runs.iter() {
             let font_id = self.resolve_font(&run.font);
             if let Some(last_run) = font_runs.last_mut() {
-                if last_run.font_id == font_id {
+                if last_run.font_id == font_id && last_run.letter_spacing == run.letter_spacing {
                     last_run.len += run.len;
                     continue;
                 }
@@ -541,6 +546,7 @@ impl WindowTextSystem {
             font_runs.push(FontRun {
                 len: run.len,
                 font_id,
+                letter_spacing: run.letter_spacing,
             });
         }
 
@@ -674,6 +680,8 @@ pub struct TextRun {
     pub len: usize,
     /// The font to use for this run.
     pub font: Font,
+    /// Extra horizontal space added after each glyph in this run (CSS letter-spacing / tracking). Zero by default.
+    pub letter_spacing: Pixels,
     /// The color
     pub color: Hsla,
     /// The background color (if any)
